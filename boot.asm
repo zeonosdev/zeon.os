@@ -1,5 +1,5 @@
 ; ============================================
-; ZEONOS v0.3.0 - BOOT.ASM
+; ZEONOS - BOOT.ASM
 ; Target Architecture: x86 (IA-32) Bare-Metal
 ; Description: Multiboot header & Kernel Entry Point
 ; ============================================
