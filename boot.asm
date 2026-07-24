@@ -15,7 +15,7 @@ align 4
 section .bss
 align 16
 stack_bottom:
-    resb 65536
+    resb 65536                  ; Stack 64 KiB
 stack_top:
 
 section .text
@@ -35,23 +35,3 @@ _start:
     cli
     hlt
     jmp .hang
-
-global gdt_flush
-gdt_flush:
-    mov eax, [esp + 4]
-    lgdt [eax]
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-    jmp 0x08:.flush_complete
-.flush_complete:
-    ret
-
-global idt_load
-idt_load:
-    mov eax, [esp + 4]
-    lidt [eax]
-    ret
