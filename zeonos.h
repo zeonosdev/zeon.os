@@ -110,12 +110,11 @@ int filesystem_create_file(const char* filename, uint32_t size);
 void filesystem_list_files(void);
 void shell_start(void);
 
-/* Auth Subsystem Prototypes */
+/* Auth Subsystem & Dynamic Account Prototypes */
 void auth_init(void);
 int auth_register_user(const char* username, const char* password);
 int auth_login_user(const char* username, const char* password);
-void show_register_screen(void);
-void show_login_screen(void);
-
+void auth_prompt_register(void);
+void auth_prompt_login(void);
 
 #endif
