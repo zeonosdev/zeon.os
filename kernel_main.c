@@ -18,7 +18,7 @@ int check_system_integrity() {
         return 0; // MODIF
     }
 }
-
+// DONT MODIF THIS
 void print_system_banner() {
     if (check_system_integrity()) {
         printf("\033[32m[SYSTEM STATUS: OFFICIAL ZEONOS BUILD]\033[0m\n");
