@@ -1,4 +1,4 @@
-#include "zeonos_h"
+#include "zeonos.h"
 
 struct gdt_entry_struct gdt_entries[5];
 struct gdt_ptr_struct gdt_ptr;
@@ -25,41 +25,20 @@ void init_gdt(void) {
     gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
     gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
 
-    asm volatile(
-        "lgdt %0\n\t"
-        "mov $0x10, %%ax\n\t"
-        "mov %%ax, %%ds\n\t"
-        "mov %%ax, %%es\n\t"
-        "mov %%ax, %%fs\n\t"
-        "mov %%ax, %%gs\n\t"
-        "mov %%ax, %%ss\n\t"
-        "ljmp $0x08, $1f\n\t"
-        "1:\n\t"
-        : : "m"(gdt_ptr) : "memory"
-    );
-    kernel_print("GDT: Initialized Successfully\n", COLOR_GREEN);
+    kernel_print("GDT: Inisialisasi Berhasil\\n", COLOR_LIGHT_BLUE);
 }
 
 void init_idt(void) {
     idt_ptr.limit = sizeof(struct idt_entry_struct) * 256 - 1;
     idt_ptr.base = (uint32_t)&idt_entries;
     memory_set(&idt_entries, 0, sizeof(struct idt_entry_struct) * 256);
-    asm volatile("lidt %0" : : "m"(idt_ptr));
-    kernel_print("IDT: Initialized Successfully\n", COLOR_GREEN);
-}
-
-void pic_send_eoi(unsigned char irq) {
-    if (irq >= 8) outb(PIC2_COMMAND, PIC_EOI);
-    outb(PIC1_COMMAND, PIC_EOI);
+    kernel_print("IDT: Inisialisasi Berhasil\\n", COLOR_LIGHT_BLUE);
 }
 
 void pic_remap(int offset1, int offset2) {
-    unsigned char a1 = inb(PIC1_DATA);
-    unsigned char a2 = inb(PIC2_DATA);
     outb(PIC1_COMMAND, 0x11); outb(PIC2_COMMAND, 0x11);
     outb(PIC1_DATA, offset1); outb(PIC2_DATA, offset2);
     outb(PIC1_DATA, 4); outb(PIC2_DATA, 2);
     outb(PIC1_DATA, 0x01); outb(PIC2_DATA, 0x01);
-    outb(PIC1_DATA, a1); outb(PIC2_DATA, a2);
-    kernel_print("PIC: Remapped Successfully\n", COLOR_GREEN);
+    kernel_print("PIC: Remapped Berhasil\\n", COLOR_LIGHT_BLUE);
 }
