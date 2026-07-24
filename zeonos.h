@@ -86,6 +86,12 @@ struct FileSystem {
     struct FileEntry files[MAX_FILES];
 };
 
+struct UserAccount {
+    char username[32];
+    char password[32];
+    uint8_t is_active;
+};
+
 /* Prototypes */
 void outb(uint16_t port, uint8_t value);
 uint8_t inb(uint16_t port);
