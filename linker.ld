@@ -26,6 +26,3 @@ SECTIONS
         *(.bss)
     }
 }
-        *(.bss)
-    }
-}
