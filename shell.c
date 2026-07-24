@@ -8,9 +8,9 @@ static vfs_node_t* current_dir;
 
 void cmd_neofetch() {
     printf("\n");
-    printf("    /\033[36m    captain\033[0m@\033[36mzeonos\033[0m\n");
+    printf("    /\033[36m    user\033[0m@\033[36mzeonos\033[0m\n");
     printf("   /  \\   ---------------\n");
-    printf("  / /\\ \\  OS: ZEONOS x86 Kernel (Linux-like)\n");
+    printf("  / /\\ \\  OS: ZEONOS x86 Kernel\n");
     printf(" / /__\\ \\ Kernel: 1.0.0-zeon-generic\n");
     printf("/______/\\ Shell: zeon-shell v1.0\n");
     printf("  \\____\\/ Memory: 64MB / 512MB RAM\n\n");
@@ -69,9 +69,10 @@ void shell_run() {
         if (strcmp(line, "neofetch") == 0) cmd_neofetch();
         else if (strcmp(line, "ls") == 0) cmd_ls();
         else if (strncmp(line, "cat ", 4) == 0) cmd_cat(line + 4);
-        else if (strcmp(line, "whoami") == 0) printf("captain\n");
+        else if (strcmp(line, "whoami") == 0) printf("YOU IS ADMIN\n");
         else if (strncmp(line, "touch ", 6) == 0) vfs_create_file(current_dir, line + 6, "");
         else if (strncmp(line, "mkdir ", 6) == 0) vfs_mkdir(current_dir, line + 6);
         else if (pos > 0) printf("zeon-shell: command not found: %s\n", line);
     }
 }
+print("error1.1");
