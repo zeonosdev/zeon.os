@@ -182,6 +182,26 @@ int main() {
                 return 0;
             default:
                 printf("\n[ERROR] Opsi tidak valid!\n");
+
+void zeon_login_process(const char* username) {
+    // Cari user di database
+    zeon_user_t* u = find_user(username);
+
+    if (u != NULL) {
+        // PERIKSA STATUS BAN
+        if (u->is_banned == 1) {
+            printf("\n\033[31m==================================================\033[0m\n");
+            printf("\033[31m [ACCESS DENIED] Account '%s' is BANNED!          \033[0m\n", u->username);
+            printf("\033[31m You are restricted from accessing ZEONOS Kernel. \033[0m\n");
+            printf("\033[31m==================================================\033[0m\n\n");
+            return; // Gagalkan login, lempar kembali ke layar awal
+        }
+
+        // Jika tidak dibanned, izinkan masuk ke zeon-shell
+        printf("\033[32m[SUCCESS] Welcome back to ZEONOS, %s!\033[0m\n", u->username);
+        launch_zeon_shell(u);
+    }
+            
         }
     }
     return 0;
