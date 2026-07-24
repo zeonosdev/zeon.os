@@ -3,19 +3,13 @@
 #define USER_DB_FILE "users.dat"
 #define MAX_USERS 10
 
-struct UserAccount {
-    char username[32];
-    char password[32];
-    uint8_t is_active;
-};
-
 static struct UserAccount user_database[MAX_USERS];
 static int total_registered_users = 0;
 
 void auth_init(void) {
     memory_set(user_database, 0, sizeof(user_database));
     filesystem_create_file(USER_DB_FILE, sizeof(struct UserAccount) * MAX_USERS);
-    kernel_print("AUTH: File database 'users.dat' berhasil dihubungkan.\\n", COLOR_LIGHT_BLUE);
+    kernel_print("AUTH: Database 'users.dat' berhasil di-attach.\\n", COLOR_LIGHT_BLUE);
 }
 
 int auth_register_user(const char* username, const char* password) {
@@ -56,7 +50,7 @@ int auth_login_user(const char* username, const char* password) {
 
 void auth_prompt_register(void) {
     vga_clear_screen();
-    // Teks Menu Registrasi Awal Menggunakan Warna Biru Cerah (COLOR_LIGHT_BLUE)
+    // Warna Menu Teks Biru (COLOR_LIGHT_BLUE)
     kernel_print("=========================================================================\n", COLOR_LIGHT_BLUE);
     kernel_print("                ZEONOS ACCOUNT REGISTRATION (VFS DB)                     \n", COLOR_LIGHT_BLUE);
     kernel_print("=========================================================================\n\n", COLOR_LIGHT_BLUE);
@@ -70,14 +64,13 @@ void auth_prompt_register(void) {
     kernel_print("\n Password        : **********\n\n", COLOR_LIGHT_BLUE);
 
     if (auth_register_user(custom_user, custom_pass)) {
-        kernel_print(" [SUCCESS] Akun berhasil disimpan ke database 'users.dat'!\n", COLOR_LIGHT_GREEN);
+        kernel_print(" [SUCCESS] Akun berhasil disimpan ke 'users.dat' Database!\n", COLOR_LIGHT_GREEN);
     } else {
         kernel_print(" [ERROR] Gagal menyimpan akun ke Database!\n", COLOR_LIGHT_RED);
     }
 }
 
 void auth_prompt_login(void) {
-    // Teks Menu Login Menggunakan Warna Biru Cerah
     kernel_print("\n-------------------------------------------------------------------------\n", COLOR_LIGHT_BLUE);
     kernel_print("                      ZEONOS SYSTEM LOGIN                                \n", COLOR_LIGHT_BLUE);
     kernel_print("-------------------------------------------------------------------------\n\n", COLOR_LIGHT_BLUE);
