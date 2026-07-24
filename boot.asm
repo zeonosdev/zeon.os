@@ -15,7 +15,7 @@ align 4
 section .bss
 align 16
 stack_bottom:
-    resb 65536                  ; Stack 64 KiB
+    resb 65536                  ; Stack memory 64 KiB
 stack_top:
 
 section .text
