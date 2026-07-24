@@ -4,20 +4,20 @@ LD = ld
 
 CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -c
 ASFLAGS = -f elf32
-LDFLAGS = -m elf_i386 -T linker
+LDFLAGS = -m elf_i386 -T linker.ld
 
-OBJS = boot.o io.o vga.o mmu.o idt_gdt.o drivers.o task.o fs.o shell.o kernel.o
-KERNEL_BIN = zeonosbin
+OBJS = boot.o io.o vga.o mmu.o idt_gdt.o drivers.o task.o fs.o auth.o shell.o kernel.o
+KERNEL_BIN = zeonos.bin
 
 all: $(KERNEL_BIN)
 
-boot.o: boot
-	$(AS) $(ASFLAGS) boot -o boot.o
+boot.o: boot.asm
+	$(AS) $(ASFLAGS) boot.asm -o boot.o
 
-%.o: % zeonos_h
+%.o: %.c zeonos.h
 	$(CC) $(CFLAGS) $< -o $@
 
-$(KERNEL_BIN): $(OBJS) linker
+$(KERNEL_BIN): $(OBJS) linker.ld
 	$(LD) $(LDFLAGS) -o $(KERNEL_BIN) $(OBJS)
 
 run: $(KERNEL_BIN)
