@@ -32,3 +32,29 @@ void kernel_print(const char* message, uint8_t color) {
         vga_putchar(*message++, color);
     }
 }
+
+void kernel_print_hex(uint32_t number, uint8_t color) {
+    char hex_chars[] = "0123456789ABCDEF";
+    char buffer[11];
+    buffer[0] = '0'; buffer[1] = 'x'; buffer[10] = '\0';
+    for (int i = 7; i >= 0; i--) {
+        buffer[i + 2] = hex_chars[(number >> (i * 4)) & 0xF];
+    }
+    kernel_print(buffer, color);
+}
+
+void kernel_print_dec(uint32_t number, uint8_t color) {
+    if (number == 0) {
+        vga_putchar('0', color);
+        return;
+    }
+    char buffer[11];
+    int index = 0;
+    while (number > 0) {
+        buffer[index++] = '0' + (number % 10);
+        number /= 10;
+    }
+    while (index > 0) {
+        vga_putchar(buffer[--index], color);
+    }
+}
