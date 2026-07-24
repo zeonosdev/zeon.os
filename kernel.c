@@ -3,7 +3,7 @@
 void kernel_main(void) {
     vga_clear_screen();
     
-    // Teks Layar Penyambut Awal Menggunakan Warna Biru (COLOR_LIGHT_BLUE)
+    // Header Boot Teks Biru (COLOR_LIGHT_BLUE)
     kernel_print("=========================================================================\n", COLOR_LIGHT_BLUE);
     kernel_print("                 ZEONOS v0.3.0 OPERATING SYSTEM BOOTING                  \n", COLOR_LIGHT_BLUE);
     kernel_print("=========================================================================\n\n", COLOR_LIGHT_BLUE);
