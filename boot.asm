@@ -1,9 +1,3 @@
-; ============================================
-; ZEONOS - BOOT.ASM
-; Target Architecture: x86 (IA-32) Bare-Metal
-; Description: Multiboot header & Kernel Entry Point
-; ============================================
-
 [BITS 32]
 
 MULTIBOOT_PAGE_ALIGN    equ 1 << 0
@@ -31,13 +25,10 @@ extern kernel_main
 _start:
     cli
     mov esp, stack_top
-
     push 0
     popf
-
     push ebx
     push eax
-
     call kernel_main
 
 .hang:
@@ -49,16 +40,13 @@ global gdt_flush
 gdt_flush:
     mov eax, [esp + 4]
     lgdt [eax]
-
     mov ax, 0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
-
     jmp 0x08:.flush_complete
-
 .flush_complete:
     ret
 
