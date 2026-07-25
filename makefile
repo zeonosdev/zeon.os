@@ -1,27 +1,21 @@
-CC = gcc
-AS = nasm
-LD = ld
+CC = x86_64-w64-mingw32-gcc
+AS = x86_64-w64-mingw32-as
+CFLAGS = -I/usr/include/efi -I/usr/include/efi/x86_64 -fno-stack-protector -fshort-wchar -mno-red-zone
 
-CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -Wall -Wextra -c
-ASFLAGS = -f elf32
-LDFLAGS = -m elf_i386 -T linker.ld
+all: build_iso
 
-OBJS = boot.o io.o vga.o mmu.o idt_gdt.o drivers.o task.o fs.o auth.o shell.o kernel.o
-KERNEL_BIN = zeonos.bin
+boot.o: boot.s
+	$(AS) boot.s -o boot.o
 
-all: $(KERNEL_BIN)
+main.o: main.c
+	$(CC) $(CFLAGS) -c main.c -o main.o
 
-boot.o: boot.asm
-	$(AS) $(ASFLAGS) boot.asm -o boot.o
+build_efi: boot.o main.o
+	mkdir -p iso_root/EFI/BOOT
+	$(CC) -shared -Bsymbolic -e efi_main -o iso_root/EFI/BOOT/BOOTX64.EFI boot.o main.o -lgnuefi -lefi
 
-%.o: %.c zeonos.h
-	$(CC) $(CFLAGS) $< -o $@
-
-$(KERNEL_BIN): $(OBJS) linker.ld
-	$(LD) $(LDFLAGS) -o $(KERNEL_BIN) $(OBJS)
-
-run: $(KERNEL_BIN)
-	qemu-system-i386 -kernel $(KERNEL_BIN)
+build_iso: build_efi
+	xorriso -as mkisofs -R -f -e EFI/BOOT/BOOTX64.EFI -no-emul-boot -o atrum_os.iso iso_root
 
 clean:
-	rm -rf *.o $(KERNEL_BIN)
+	rm -rf *.o iso_root atrum_os.iso
