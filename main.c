@@ -6,9 +6,9 @@
 // ==========================================
 
 #define OS_NAME         L"ZEON OS"
-#define OS_VERSION      L"2.0.0-baremetal"
-#define OS_CODENAME     L"FUST GRAPHICS CORE"
-#define MAX_FILES       15
+#define OS_VERSION      L"1.0-RELEASE"
+#define OS_CODENAME     L"FUST GRAPHICS COMPLETE"
+#define MAX_FILES       20
 #define BUFFER_SIZE     256
 #define FILE_MAX_TEXT   1024
 
@@ -19,8 +19,6 @@
 #define COLOR_YELLOW    EFI_YELLOW
 #define COLOR_RED       EFI_RED
 #define COLOR_WHITE     EFI_WHITE
-#define COLOR_BG_EDIT   EFI_BACKGROUND_BLUE
-#define https://google.com/   676767
 
 // ==========================================
 // VIRTUAL FILE SYSTEM (VFS) STRUCTURE
@@ -65,23 +63,21 @@ void sleep_ms(UINTN milliseconds) {
     }
 }
 
-// Split String Helper Sederhana
+// Split String Parser Helper
 void split_args(CHAR16 *input, CHAR16 *cmd, CHAR16 *arg1, CHAR16 *arg2) {
     UINTN i = 0, j = 0;
     cmd[0] = L'\0';
     arg1[0] = L'\0';
     arg2[0] = L'\0';
 
-    // Parse Command
     while (input[i] != L'\0' && input[i] != L' ') {
         cmd[j++] = input[i++];
     }
     cmd[j] = L'\0';
 
     if (input[i] == L'\0') return;
-    i++; // Skip Space
+    i++;
 
-    // Parse Arg1
     j = 0;
     while (input[i] != L'\0' && input[i] != L' ') {
         arg1[j++] = input[i++];
@@ -89,9 +85,8 @@ void split_args(CHAR16 *input, CHAR16 *cmd, CHAR16 *arg1, CHAR16 *arg2) {
     arg1[j] = L'\0';
 
     if (input[i] == L'\0') return;
-    i++; // Skip Space
+    i++;
 
-    // Parse Arg2
     j = 0;
     while (input[i] != L'\0') {
         arg2[j++] = input[i++];
@@ -113,7 +108,7 @@ void vfs_init() {
 
     // Default System Files
     StrCpy(ramdisk[0].name, L"main.c");
-    StrCpy(ramdisk[0].content, L"// ZEON OS Kernel Source Code\nvoid kernel_main() {\n    // FUST Engine Initialized\n}");
+    StrCpy(ramdisk[0].content, L"// ZEON OS Kernel Source Code\nvoid kernel_main() {\n    // FUST Engine Ready\n}");
     ramdisk[0].is_used = TRUE;
     ramdisk[0].size = StrLen(ramdisk[0].content) * sizeof(CHAR16);
 
@@ -123,7 +118,7 @@ void vfs_init() {
     ramdisk[1].size = StrLen(ramdisk[1].content) * sizeof(CHAR16);
 
     StrCpy(ramdisk[2].name, L"readme.txt");
-    StrCpy(ramdisk[2].content, L"Selamat datang di ZEON OS!\nGunakan perintah 'edit <file>' untuk mengedit kodingan.");
+    StrCpy(ramdisk[2].content, L"Selamat datang di ZEON OS 100% Complete!\nGunakan 'explorer' atau 'edit <file>'.");
     ramdisk[2].is_used = TRUE;
     ramdisk[2].size = StrLen(ramdisk[2].content) * sizeof(CHAR16);
 }
@@ -206,6 +201,47 @@ void vfs_touch(EFI_SYSTEM_TABLE *ST, CHAR16 *filename) {
     set_color(ST, COLOR_DEFAULT);
 }
 
+void vfs_cp(EFI_SYSTEM_TABLE *ST, CHAR16 *src, CHAR16 *dest) {
+    if (src[0] == L'\0' || dest[0] == L'\0') {
+        set_color(ST, COLOR_RED);
+        Print(L"Penggunaan: cp <file_asal> <file_tujuan>\n\n");
+        set_color(ST, COLOR_DEFAULT);
+        return;
+    }
+
+    INTN src_idx = -1;
+    for (UINTN i = 0; i < MAX_FILES; i++) {
+        if (ramdisk[i].is_used && StrCmp(src, ramdisk[i].name) == 0) {
+            src_idx = i;
+            break;
+        }
+    }
+
+    if (src_idx == -1) {
+        set_color(ST, COLOR_RED);
+        Print(L"cp: File asal '%s' tidak ditemukan!\n\n", src);
+        set_color(ST, COLOR_DEFAULT);
+        return;
+    }
+
+    for (UINTN i = 0; i < MAX_FILES; i++) {
+        if (!ramdisk[i].is_used) {
+            StrCpy(ramdisk[i].name, dest);
+            StrCpy(ramdisk[i].content, ramdisk[src_idx].content);
+            ramdisk[i].is_used = TRUE;
+            ramdisk[i].size = ramdisk[src_idx].size;
+            set_color(ST, COLOR_PROMPT);
+            Print(L"File berhasil dikiaskan dari '%s' ke '%s'.\n\n", src, dest);
+            set_color(ST, COLOR_DEFAULT);
+            return;
+        }
+    }
+
+    set_color(ST, COLOR_RED);
+    Print(L"cp: Slot RAMDisk Penuh!\n\n");
+    set_color(ST, COLOR_DEFAULT);
+}
+
 void vfs_rename(EFI_SYSTEM_TABLE *ST, CHAR16 *old_name, CHAR16 *new_name) {
     if (old_name[0] == L'\0' || new_name[0] == L'\0') {
         set_color(ST, COLOR_RED);
@@ -252,9 +288,46 @@ void vfs_rm(EFI_SYSTEM_TABLE *ST, CHAR16 *filename) {
     set_color(ST, COLOR_DEFAULT);
 }
 
+void vfs_df(EFI_SYSTEM_TABLE *ST) {
+    UINTN used_slots = 0;
+    UINTN total_bytes = 0;
+
+    for (UINTN i = 0; i < MAX_FILES; i++) {
+        if (ramdisk[i].is_used) {
+            used_slots++;
+            total_bytes += ramdisk[i].size;
+        }
+    }
+
+    set_color(ST, COLOR_CYAN);
+    Print(L"=== STATISTIK MEMORI RAMDISK ===\n");
+    set_color(ST, COLOR_DEFAULT);
+    Print(L"Slot Terpakai : %d / %d\n", used_slots, MAX_FILES);
+    Print(L"Slot Kosong   : %d\n", MAX_FILES - used_slots);
+    Print(L"Total Ukuran  : %d Bytes\n\n", total_bytes);
+}
+
 // ==========================================
-// INTERACTIVE TEXT EDITOR (MINI CODE IDE)
+// INTERACTIVE FILE EXPLORER & CODE IDE
 // ==========================================
+
+void app_file_explorer(EFI_SYSTEM_TABLE *ST) {
+    clear_screen(ST);
+    set_color(ST, COLOR_YELLOW);
+    Print(L"===========================================================\n");
+    Print(L"            ZEON OS VISUAL FILE EXPLORER v1.0              \n");
+    Print(L"===========================================================\n\n");
+    set_color(ST, COLOR_DEFAULT);
+
+    vfs_ls(ST);
+    vfs_df(ST);
+
+    Print(L"Tekan sembarang tombol untuk kembali ke terminal...");
+    EFI_INPUT_KEY Key;
+    WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
+    uefi_call_wrapper(ST->ConIn->ReadKeyStroke, 2, ST->ConIn, &Key);
+    clear_screen(ST);
+}
 
 void app_code_editor(EFI_SYSTEM_TABLE *ST, CHAR16 *filename) {
     if (filename[0] == L'\0') {
@@ -272,7 +345,6 @@ void app_code_editor(EFI_SYSTEM_TABLE *ST, CHAR16 *filename) {
         }
     }
 
-    // Buat file otomatis jika belum ada
     if (target_idx == -1) {
         for (UINTN i = 0; i < MAX_FILES; i++) {
             if (!ramdisk[i].is_used) {
@@ -288,7 +360,7 @@ void app_code_editor(EFI_SYSTEM_TABLE *ST, CHAR16 *filename) {
 
     if (target_idx == -1) {
         set_color(ST, COLOR_RED);
-        Print(L"edit: Slot RAMDisk Penuh!\n\n");
+        Print(L"edit: RAMDisk Penuh!\n\n");
         set_color(ST, COLOR_DEFAULT);
         return;
     }
@@ -296,7 +368,7 @@ void app_code_editor(EFI_SYSTEM_TABLE *ST, CHAR16 *filename) {
     clear_screen(ST);
     set_color(ST, COLOR_YELLOW);
     Print(L"===========================================================\n");
-    Print(L"      ZEON OS TEXT EDITOR / CODE IDE v1.0                  \n");
+    Print(L"      ZEON OS TEXT EDITOR / CODE IDE                       \n");
     Print(L"      FILE: %s                                              \n", ramdisk[target_idx].name);
     Print(L"      [ESC] Simpan & Keluar | [ENTER] Baris Baru           \n");
     Print(L"===========================================================\n\n");
@@ -315,8 +387,7 @@ void app_code_editor(EFI_SYSTEM_TABLE *ST, CHAR16 *filename) {
         WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
         uefi_call_wrapper(ST->ConIn->ReadKeyStroke, 2, ST->ConIn, &Key);
 
-        // ESC Key (ScanCode 0x17) -> Save and Exit
-        if (Key.ScanCode == 0x17) {
+        if (Key.ScanCode == 0x17) { // ESC Key
             StrCpy(ramdisk[target_idx].content, edit_buffer);
             ramdisk[target_idx].size = StrLen(edit_buffer) * sizeof(CHAR16);
             clear_screen(ST);
@@ -354,12 +425,7 @@ void app_code_editor(EFI_SYSTEM_TABLE *ST, CHAR16 *filename) {
 
 void render_fust_wallpaper(EFI_SYSTEM_TABLE *ST) {
     EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = get_gop(ST);
-    if (!gop) {
-        set_color(ST, COLOR_RED);
-        Print(L"FUST Engine Error: Graphics Output Protocol Gagal!\n");
-        set_color(ST, COLOR_DEFAULT);
-        return;
-    }
+    if (!gop) return;
 
     UINT32 width = gop->Mode->Info->HorizontalResolution;
     UINT32 height = gop->Mode->Info->VerticalResolution;
@@ -374,7 +440,7 @@ void render_fust_wallpaper(EFI_SYSTEM_TABLE *ST) {
             } else {
                 UINT32 line_y = y - (height / 2);
                 if ((line_y % 18 < 3) || (x % 45 == 0)) {
-                    color = 0xFF5500; // FUST Bright Orange
+                    color = 0xFF5500;
                 } else {
                     color = 0x0A0015; 
                 }
@@ -423,64 +489,7 @@ void app_neofetch(EFI_SYSTEM_TABLE *ST, EFI_RUNTIME_SERVICES *RT) {
     Print(L" /___/___/\\____/_|\\_|  "); set_color(ST, COLOR_YELLOW); Print(L" Version   : "); set_color(ST, COLOR_DEFAULT); Print(L"%s\n", OS_VERSION);
     Print(L"                       "); set_color(ST, COLOR_YELLOW); Print(L" Engine    : "); set_color(ST, COLOR_DEFAULT); Print(L"%s\n", OS_CODENAME);
     Print(L"                       "); set_color(ST, COLOR_YELLOW); Print(L" Real Time : "); set_color(ST, COLOR_DEFAULT); Print(L"%02d:%02d:%02d UTC\n", Time.Hour, Time.Minute, Time.Second);
-    Print(L"                       "); set_color(ST, COLOR_YELLOW); Print(L" Shell     : "); set_color(ST, COLOR_DEFAULT); Print(L"zeon-shell v2.0\n\n");
-    set_color(ST, COLOR_DEFAULT);
-}
-
-void app_matrix_effect(EFI_SYSTEM_TABLE *ST) {
-    clear_screen(ST);
-    set_color(ST, COLOR_PROMPT);
-    Print(L"=== FUST MATRIX ANIMATION ===\n");
-    Print(L"Tekan sembarang tombol untuk keluar...\n\n");
-
-    EFI_INPUT_KEY Key;
-    UINTN counter = 0;
-
-    while (uefi_call_wrapper(ST->ConIn->ReadKeyStroke, 2, ST->ConIn, &Key) == EFI_NOT_READY) {
-        CHAR16 random_char = L'A' + (counter % 26);
-        Print(L"%c %d ", random_char, counter % 9);
-        counter++;
-        if (counter % 16 == 0) Print(L"\n");
-        sleep_ms(20);
-    }
-
-    set_color(ST, COLOR_DEFAULT);
-    Print(L"\n\nMatrix selesai.\n\n");
-}
-
-void app_calculator(EFI_SYSTEM_TABLE *ST) {
-    set_color(ST, COLOR_YELLOW);
-    Print(L"=== KALKULATOR Aritmatika ZEON ===\n");
-    set_color(ST, COLOR_DEFAULT);
-
-    UINTN a = 24, b = 6;
-    Print(L"Hasil untuk A = 24 dan B = 6:\n");
-    Print(L"  A + B = %d\n", a + b);
-    Print(L"  A - B = %d\n", a - b);
-    Print(L"  A * B = %d\n", a * b);
-    Print(L"  A / B = %d\n\n", a / b);
-}
-
-void app_game_tebak_angka(EFI_SYSTEM_TABLE *ST) {
-    set_color(ST, COLOR_YELLOW);
-    Print(L"=== GAME TEBAK ANGKA ZEON ===\n");
-    set_color(ST, COLOR_DEFAULT);
-
-    UINTN target = 7;
-    EFI_INPUT_KEY Key;
-
-    Print(L"Tebak angka (1-9): ");
-    WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
-    uefi_call_wrapper(ST->ConIn->ReadKeyStroke, 2, ST->ConIn, &Key);
-    Print(L"%c\n", Key.UnicodeChar);
-
-    if (Key.UnicodeChar == (L'0' + target)) {
-        set_color(ST, COLOR_PROMPT);
-        Print(L"[BENAR] Tebakan lo tepat!\n\n");
-    } else {
-        set_color(ST, COLOR_RED);
-        Print(L"[SALAH] Angka yang benar: %d\n\n", target);
-    }
+    Print(L"                       "); set_color(ST, COLOR_YELLOW); Print(L" Status    : "); set_color(ST, COLOR_DEFAULT); Print(L"100%% Baremetal Ready\n\n");
     set_color(ST, COLOR_DEFAULT);
 }
 
@@ -489,19 +498,18 @@ void display_help(EFI_SYSTEM_TABLE *ST) {
     Print(L"=== DAFTAR PERINTAH ZEON OS ===\n");
     set_color(ST, COLOR_DEFAULT);
     Print(L"  neofetch                 - Informasi statistik sistem\n");
-    Print(L"  fust                     - Wallpaper FUST Speed Grid\n");
-    Print(L"  cyber                    - Wallpaper Cyberpunk Grid\n");
-    Print(L"  matrix                   - Animasi Matrix\n");
-    Print(L"  calc                     - Kalkulator sistem\n");
-    Print(L"  game                     - Mini game tebak angka\n");
+    Print(L"  explorer                 - Buka Visual File Manager\n");
+    Print(L"  fust / cyber             - Render Wallpaper FUST / Cyber\n");
     Print(L"  ls                       - List file RAMDisk\n");
     Print(L"  cat <file>               - Baca isi file\n");
     Print(L"  touch <file>             - Buat file baru\n");
-    Print(L"  edit <file>              - Open Code Editor / IDE\n");
+    Print(L"  edit <file>              - Buka Code Editor / IDE\n");
+    Print(L"  cp <asal> <tujuan>       - Duplikat file\n");
     Print(L"  rename <lama> <baru>     - Ubah nama file\n");
     Print(L"  rm <file>                - Hapus file\n");
+    Print(L"  df                       - Statistik memori VFS\n");
     Print(L"  clear                    - Bersihkan layar\n");
-    Print(L"  poweroff                 - Matikan komputer\n\n");
+    Print(L"  poweroff                 - Shutdown komputer\n\n");
 }
 
 // ==========================================
@@ -516,10 +524,10 @@ EFI_STATUS kernel_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     set_color(ST, COLOR_PROMPT);
     Print(L"--------------------------------------------------\n");
-    Print(L"   ZEON OS BAREMETAL KERNEL v2.0 [FUST CORE]      \n");
+    Print(L"   ZEON OS BAREMETAL KERNEL v2.5 [COMPLETE CORE]  \n");
     Print(L"--------------------------------------------------\n");
     set_color(ST, COLOR_DEFAULT);
-    Print(L"Ketik 'neofetch' atau 'help' untuk daftar perintah.\n\n");
+    Print(L"Ketik 'neofetch', 'explorer', atau 'help'.\n\n");
 
     EFI_INPUT_KEY Key;
     CHAR16 input_buffer[BUFFER_SIZE];
@@ -527,7 +535,6 @@ EFI_STATUS kernel_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     UINTN buf_idx = 0;
 
     while (1) {
-        // ZEON Shell Prompt: root@zeon:~#
         set_color(ST, COLOR_PROMPT);
         Print(L"root@zeon");
         set_color(ST, COLOR_DEFAULT);
@@ -538,7 +545,6 @@ EFI_STATUS kernel_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
         Print(L"# ");
         set_color(ST, COLOR_DEFAULT);
 
-        // Sub-loop Keyboard Input
         buf_idx = 0;
         while (1) {
             WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
@@ -559,13 +565,14 @@ EFI_STATUS kernel_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
             }
         }
 
-        // Parsing Command & Arguments
         split_args(input_buffer, cmd, arg1, arg2);
 
         if (StrCmp(cmd, L"help") == 0) {
             display_help(ST);
         } else if (StrCmp(cmd, L"neofetch") == 0) {
             app_neofetch(ST, RT);
+        } else if (StrCmp(cmd, L"explorer") == 0) {
+            app_file_explorer(ST);
         } else if (StrCmp(cmd, L"fust") == 0) {
             render_fust_wallpaper(ST);
             WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
@@ -574,12 +581,6 @@ EFI_STATUS kernel_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
             render_cyber_wallpaper(ST);
             WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
             clear_screen(ST);
-        } else if (StrCmp(cmd, L"matrix") == 0) {
-            app_matrix_effect(ST);
-        } else if (StrCmp(cmd, L"calc") == 0) {
-            app_calculator(ST);
-        } else if (StrCmp(cmd, L"game") == 0) {
-            app_game_tebak_angka(ST);
         } else if (StrCmp(cmd, L"ls") == 0) {
             vfs_ls(ST);
         } else if (StrCmp(cmd, L"cat") == 0) {
@@ -588,10 +589,14 @@ EFI_STATUS kernel_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
             vfs_touch(ST, arg1);
         } else if (StrCmp(cmd, L"edit") == 0) {
             app_code_editor(ST, arg1);
+        } else if (StrCmp(cmd, L"cp") == 0) {
+            vfs_cp(ST, arg1, arg2);
         } else if (StrCmp(cmd, L"rename") == 0) {
             vfs_rename(ST, arg1, arg2);
         } else if (StrCmp(cmd, L"rm") == 0) {
             vfs_rm(ST, arg1);
+        } else if (StrCmp(cmd, L"df") == 0) {
+            vfs_df(ST);
         } else if (StrCmp(cmd, L"clear") == 0) {
             clear_screen(ST);
         } else if (StrCmp(cmd, L"poweroff") == 0 || StrCmp(cmd, L"shutdown") == 0) {
