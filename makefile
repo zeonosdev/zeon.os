@@ -1,21 +1,48 @@
-CC = x86_64-w64-mingw32-gcc
-AS = x86_64-w64-mingw32-as
-CFLAGS = -I/usr/include/efi -I/usr/include/efi/x86_64 -fno-stack-protector -fshort-wchar -mno-red-zone
+# ==========================================
+# ZEON OS BAREMETAL MAKEFILE BUILD SYSTEM
+# ==========================================
 
-all: build_iso
+ARCH            = x86_64
+OBJS            = main.o
+TARGET          = BOOTX64.EFI
+ISO_NAME        = ZEON_OS_v2.5.iso
 
-boot.o: boot.s
-	$(AS) boot.s -o boot.o
+# UEFI Include & Library Paths (GNU-EFI)
+EFIINC          = /usr/include/efi
+EFIINCS         = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/protocol
+LIB             = /usr/lib
+EFILIB          = /usr/lib
+EFI_CRT_OBJS    = $(EFILIB)/crt0-efi-$(ARCH).o
+EFI_LDS         = $(EFILIB)/elf_$(ARCH)_efi.lds
 
-main.o: main.c
-	$(CC) $(CFLAGS) -c main.c -o main.o
+# Compiler Flags
+CFLAGS          = $(EFIINCS) -fno-stack-protector -fpic \
+                  -fshort-wchar -mno-red-zone -Wall -Wextra -O2
+LDFLAGS         = -nostdlib -znocombreloc -shared \
+                  -Bsymbolic -L$(EFILIB) -L$(LIB) \
+                  -T $(EFI_LDS) $(EFI_CRT_OBJS)
 
-build_efi: boot.o main.o
+# Rules
+all: $(TARGET) iso
+
+%.o: %.c
+	gcc $(CFLAGS) -c $< -o $@
+
+main.so: $(OBJS)
+	ld $(LDFLAGS) $(OBJS) -o $@ -lgnuefi -lefi
+
+$(TARGET): main.so
+	objcopy -j .text -j .sdata -j .data -j .dynamic \
+		-j .dynsym  -j .rel -j .rela -j .reloc \
+		--target=efi-app-$(ARCH) $< $@
+
+iso: $(TARGET)
+	@echo "Creating ISO Image for ZEON OS..."
 	mkdir -p iso_root/EFI/BOOT
-	$(CC) -shared -Bsymbolic -e efi_main -o iso_root/EFI/BOOT/BOOTX64.EFI boot.o main.o -lgnuefi -lefi
-
-build_iso: build_efi
-	xorriso -as mkisofs -R -f -e EFI/BOOT/BOOTX64.EFI -no-emul-boot -o zeon_os.iso iso_root
+	cp $(TARGET) iso_root/EFI/BOOT/
+	cp startup.nsh iso_root/ 2>/dev/null || true
+	genisoimage -e EFI/BOOT/$(TARGET) -no-emul-boot -o $(ISO_NAME) iso_root
+	@echo "Build Finished! Output ISO: $(ISO_NAME)"
 
 clean:
-	rm -rf *.o iso_root zeon_os.iso
+	rm -rf *.o *.so *.EFI iso_root $(ISO_NAME)
