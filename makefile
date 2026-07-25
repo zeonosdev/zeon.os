@@ -15,7 +15,7 @@ build_efi: boot.o main.o
 	$(CC) -shared -Bsymbolic -e efi_main -o iso_root/EFI/BOOT/BOOTX64.EFI boot.o main.o -lgnuefi -lefi
 
 build_iso: build_efi
-	xorriso -as mkisofs -R -f -e EFI/BOOT/BOOTX64.EFI -no-emul-boot -o atrum_os.iso iso_root
+	xorriso -as mkisofs -R -f -e EFI/BOOT/BOOTX64.EFI -no-emul-boot -o zeon_os.iso iso_root
 
 clean:
-	rm -rf *.o iso_root atrum_os.iso
+	rm -rf *.o iso_root zeon_os.iso
