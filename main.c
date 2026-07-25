@@ -55,6 +55,20 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
             else if (MenuOption == 2) {
                 Print(L"Mematikan sistem...\n");
                 uefi_call_wrapper(RT->ResetSystem, 4, EfiResetShutdown, EFI_SUCCESS, 0, NULL);
+
+#include <efi.h>
+#include <efilib.h>
+#include "apps.h" // <-- Tinggal panggil header ini
+
+// ... di dalam pilihan menu main.c lo ...
+if (MenuOption == 0) {
+    app_game_tebak_angka(ST); // Panggil Game
+} 
+else if (MenuOption == 1) {
+    app_jam_sistem(ST, RT);   // Panggil Jam Real-time
+}
+
+                
             }
         }
     }
