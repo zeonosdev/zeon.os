@@ -13,7 +13,7 @@ People & Person
 
 Coder
 
-Proggamer
+Programmer
 
 Progamming Language
 
