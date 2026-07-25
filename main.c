@@ -17,27 +17,26 @@ EFI_GRAPHICS_OUTPUT_PROTOCOL* get_gop(EFI_SYSTEM_TABLE *ST) {
     return gop;
 }
 
+// Banner Utama ZEON OS
 void draw_cyber_banner(EFI_SYSTEM_TABLE *ST) {
     set_color(ST, EFI_LIGHTGREEN);
-    Print(L"  ___   _____   _____   ___ _____ _____ \n");
-    Print(L" / _ \\ /  ___| /  ___| / _ \\___  /  ___|\n");
-    Print(L"/ /_\\ \\\\ `--.  \\ `--. / /_\\ \\ / /\\ `--. \n");
-    Print(L"|  _  | `--. \\  `--. \\|  _  |/ /  `--. \\\n");
-    Print(L"| | | |/\\__/ / /\\__/ /| | | / /  /\\__/ \\\n");
-    Print(L"\\_| |_/\\____/  \\____/ \\_| |_/\\_/  \\____/ \n");
+    Print(L"  _______ ____  _  _    ___  ____  \n");
+    Print(L" |_  / __/ __ \\/ \\| |  / _ \\/ __/  \n");
+    Print(L"  / / _// /_/ / .` | | / // /\\ \\   \n");
+    Print(L" /___/___/\\____/_|\\_|  \\___/___/   \n");
     
     set_color(ST, EFI_CYAN);
     Print(L"===========================================\n");
-    Print(L"       ATRUM OS - FUST & ALL-IN-ONE        \n");
+    Print(L"       ZEON OS - BAREMETAL EDITION         \n");
     Print(L"===========================================\n\n");
     set_color(ST, EFI_LIGHTGRAY);
 }
 
 // ==========================================
-// MODUL WALLPAPER (GOP)
+// MODUL WALLPAPER GRAPHICS (GOP)
 // ==========================================
 
-// Wallpaper FUST (Fast Grid Horizon)
+// 1. Wallpaper FUST (Synthwave Speed Grid)
 void draw_wallpaper_fust(EFI_SYSTEM_TABLE *ST) {
     EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = get_gop(ST);
     if (!gop) return;
@@ -51,7 +50,7 @@ void draw_wallpaper_fust(EFI_SYSTEM_TABLE *ST) {
             UINT32 color = 0x000000;
             if (y < height / 2) {
                 UINT32 red = (y * 255) / (height / 2);
-                color = (red << 16) | (0x00 << 8) | 0x44; // Sky Sunset
+                color = (red << 16) | (0x00 << 8) | 0x44; // Sky Sunset Gradient
             } else {
                 UINT32 line_y = y - (height / 2);
                 if ((line_y % 18 < 3) || (x % 45 == 0)) color = 0xFF5500; // FUST Orange Line
@@ -62,7 +61,7 @@ void draw_wallpaper_fust(EFI_SYSTEM_TABLE *ST) {
     }
 }
 
-// Wallpaper CYBER (Neon Grid)
+// 2. Wallpaper CYBER (Neon Grid Cyberpunk)
 void draw_wallpaper_cyber(EFI_SYSTEM_TABLE *ST) {
     EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = get_gop(ST);
     if (!gop) return;
@@ -91,7 +90,7 @@ void draw_wallpaper_cyber(EFI_SYSTEM_TABLE *ST) {
 void app_terminal_shell(EFI_SYSTEM_TABLE *ST) {
     uefi_call_wrapper(ST->ConOut->ClearScreen, 2, ST->ConOut);
     set_color(ST, EFI_YELLOW);
-    Print(L"=== TERMINAL SHELL v1.0 ===\n");
+    Print(L"=== ZEON OS TERMINAL SHELL v1.0 ===\n");
     Print(L"Ketik 'help' untuk bantuan, atau 'exit' untuk keluar.\n\n");
     set_color(ST, EFI_LIGHTGRAY);
 
@@ -101,7 +100,7 @@ void app_terminal_shell(EFI_SYSTEM_TABLE *ST) {
 
     while (1) {
         set_color(ST, EFI_LIGHTCYAN);
-        Print(L"user@atrum-os> ");
+        Print(L"user@zeon-os> ");
         set_color(ST, EFI_LIGHTGRAY);
 
         buf_idx = 0;
@@ -127,14 +126,14 @@ void app_terminal_shell(EFI_SYSTEM_TABLE *ST) {
         if (StrCmp(buffer, L"help") == 0) {
             Print(L"Perintah: help, about, clear, exit\n\n");
         } else if (StrCmp(buffer, L"about") == 0) {
-            Print(L"Atrum OS - Bare-Metal UEFI System.\n\n");
+            Print(L"ZEON OS v1.0 - Bare-Metal Custom UEFI Operating System.\n\n");
         } else if (StrCmp(buffer, L"clear") == 0) {
             uefi_call_wrapper(ST->ConOut->ClearScreen, 2, ST->ConOut);
         } else if (StrCmp(buffer, L"exit") == 0) {
             break;
         } else if (buf_idx > 0) {
             set_color(ST, EFI_RED);
-            Print(L"Command tidak dikenal!\n\n");
+            Print(L"Command '%s' tidak ditemukan!\n\n", buffer);
             set_color(ST, EFI_LIGHTGRAY);
         }
     }
@@ -197,7 +196,7 @@ void app_jam_sistem(EFI_SYSTEM_TABLE *ST, EFI_RUNTIME_SERVICES *RT) {
 }
 
 // ==========================================
-// KERNEL MAIN (DIPANGGIL DARI BOOT.S)
+// KERNEL MAIN (ENTRY POINT DARI BOOT.S)
 // ==========================================
 
 EFI_STATUS kernel_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
@@ -218,7 +217,7 @@ EFI_STATUS kernel_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
         set_color(ST, EFI_LIGHTGRAY);
 
         if (MenuOption == 1) set_color(ST, EFI_YELLOW);
-        Print(L" %s [2] Wallpaper FUST (Synthwave Grid)\n", (MenuOption == 1) ? L"->" : L"  ");
+        Print(L" %s [2] Wallpaper FUST (Synthwave Speed Grid)\n", (MenuOption == 1) ? L"->" : L"  ");
         set_color(ST, EFI_LIGHTGRAY);
 
         if (MenuOption == 2) set_color(ST, EFI_YELLOW);
